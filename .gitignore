@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+build/
+dist/
+
+# Local env & Hydra run dirs
+.env
+outputs/
+
+# Regenerable artifacts (embeddings, pools, eval outputs) — large
+results/
+
+# Vendored upstream model repos
+third_party/
+
+# Cached tensors
+*.pt
+*.npz

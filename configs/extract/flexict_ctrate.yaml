@@ -1,0 +1,26 @@
+cache_path: results/embeddings/flexict_ctrate.pt
+device: null
+
+loader:
+  num_workers: 8
+  prefetch_factor: 4
+  pin_memory: true
+
+dataset:
+  name: ctrate
+  labels_csv: ${oc.env:CTRATE_ROOT}/reports/valid_predicted_labels.csv
+  data_dir: ${oc.env:CTRATE_ROOT}/validation
+  metadata_csv: ${oc.env:CTRATE_META}
+  max_samples: 0
+
+model:
+  name: flexict
+  # FlexiCT-3D-VLM image encoder (Stage-3, report-aligned ViT-Base, patch 8).
+  # project=false -> 1728-d concat([CLS], mean patch tokens) for kNN.
+  # Checkpoint from $FLEXICT_VLM_CHECKPOINT (set by scripts/setup_flexict.sh).
+  variant: vlm
+  project: false
+  axcodes: LPS          # FlexiCT canonical: matches Orientationd(axcodes="LPS") in its retrieval code
+  spacing: [2.0, 2.0, 2.0]
+  roi: 160
+  use_amp: true

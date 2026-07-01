@@ -1,0 +1,20 @@
+cache_path: results/embeddings/merlin_ctrate.pt
+device: null
+
+loader:
+  num_workers: 8
+  prefetch_factor: 4
+  pin_memory: true
+
+dataset:
+  name: ctrate
+  labels_csv: ${oc.env:CTRATE_ROOT}/reports/valid_predicted_labels.csv
+  data_dir: ${oc.env:CTRATE_ROOT}/validation
+  metadata_csv: ${oc.env:CTRATE_META}
+  max_samples: 0
+
+model:
+  name: merlin
+  input_shape: [224, 224, 160]
+  target_spacing: [1.5, 1.5, 3.0]
+  hu_range: [-1000.0, 1000.0]

@@ -1,0 +1,20 @@
+cache_path: results/embeddings/ctclip_ctrate.pt
+device: null
+
+loader:
+  num_workers: 8
+  prefetch_factor: 4
+  pin_memory: true
+
+dataset:
+  name: ctrate
+  labels_csv: ${oc.env:CTRATE_ROOT}/reports/valid_predicted_labels.csv
+  data_dir: ${oc.env:CTRATE_ROOT}/validation
+  metadata_csv: ${oc.env:CTRATE_META}
+  max_samples: 0
+
+model:
+  name: ctclip
+  input_shape: [240, 480, 480]
+  target_spacing: [1.5, 0.75, 0.75]
+  hu_range: [-1000.0, 1000.0]

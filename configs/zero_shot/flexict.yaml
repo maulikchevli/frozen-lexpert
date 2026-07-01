@@ -1,0 +1,14 @@
+model:
+  name: flexict
+
+# RadChest zero-shot scoring for FlexiCT-3D-VLM. Consumes the 1024-d projected
+# image features (extract/flexict_zs_radchest.yaml -> flexict-zs_radchest.pt)
+# and scores them against the Qwen3-Embedding text tower in
+# ctfm_eval.zero_shot.FlexiCTScorer. RadChest is the cleanest external ZS test
+# for FlexiCT (CT-RATE is in its pretraining; RadChest status unconfirmed).
+embedding_path: results/embeddings/flexict-zs_radchest.pt
+output_dir: results/zero_shot/predictions
+
+threshold: 0.5
+n_boot: 1000
+seed: 42

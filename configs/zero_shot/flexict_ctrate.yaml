@@ -1,0 +1,9 @@
+model:
+  name: flexict
+
+embedding_path: results/embeddings/flexict-zs_ctrate.pt
+output_dir: results/zero_shot/ctrate/predictions
+
+threshold: 0.5
+n_boot: 1000
+seed: 42

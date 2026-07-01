@@ -1,0 +1,21 @@
+# Core stack for extraction + the kNN / zero-shot / linear-probe readouts.
+# Model-specific packages (spectre-fm, colipri, merlin-vlm, rad-vision-engine,
+# and cloned repos for CT-SSG / CT-CLIP / CT-FM / VoxelFM / FlexiCT) are
+# installed per model — see docs/model_preprocessing.md.
+
+torch>=2.2
+torchvision
+monai>=1.5
+numpy
+pandas
+nibabel
+scikit-learn
+torchio
+tqdm
+hydra-core>=1.3
+omegaconf>=2.3
+transformers
+huggingface_hub
+safetensors
+open-clip-torch>=2.24
+pillow

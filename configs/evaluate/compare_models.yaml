@@ -1,0 +1,44 @@
+output_dir: results/knn_eval/compare_models
+
+eval:
+  k: 5
+  weighting: distance
+  threshold: 0.5
+  strategy: kfold
+  folds: 5
+  test_frac: 0.2
+  n_repeats: 1
+  seed: 42
+  n_boot: 1000
+
+embeddings:
+  # --- SPECTRE ---
+  - name: spectre-large
+    path: results/embeddings/spectre-large_radchest.pt
+  # --- Supervised 3D CT classifier ---
+  - name: ctssg
+    path: results/embeddings/ctssg_radchest.pt
+  # --- 3D CT CLIPs ---
+  - name: ctclip
+    path: results/embeddings/ctclip_radchest.pt
+  - name: colipri-crm
+    path: results/embeddings/colipri-crm_radchest.pt
+  # --- 3D CT SSL / foundation models ---
+  - name: ctfm
+    path: results/embeddings/ctfm_radchest.pt
+  # --- Slice-based DINOv2 SSL (CT+MRI) ---
+  - name: curia2
+    path: results/embeddings/curia2_radchest.pt
+  # --- 3D DINOv2 SSL (vision-only, native 3D ViT) ---
+  - name: voxelfm
+    path: results/embeddings/voxelfm_radchest.pt
+  # --- FlexiCT (agglomerative DINO/iBOT, native 3D) ---
+  - name: flexict
+    path: results/embeddings/flexict_radchest.pt
+  - name: flexict3d
+    path: results/embeddings/flexict3d_radchest.pt
+  - name: merlin
+    path: results/embeddings/merlin_radchest.pt
+  # --- Multi-windowing vision-language 3D CT ---
+  - name: pillar0
+    path: results/embeddings/pillar0_radchest.pt

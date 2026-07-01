@@ -1,0 +1,26 @@
+cache_path: results/embeddings/curia2_ctrate.pt
+device: null
+
+loader:
+  num_workers: 8
+  prefetch_factor: 4
+  pin_memory: true
+
+dataset:
+  name: ctrate
+  labels_csv: ${oc.env:CTRATE_ROOT}/reports/valid_predicted_labels.csv
+  data_dir: ${oc.env:CTRATE_ROOT}/validation
+  metadata_csv: ${oc.env:CTRATE_META}
+  max_samples: 0
+
+model:
+  name: curia2
+  # Slice-loop extractor; orientation runs on-device via gpu_compose on the
+  # CT-RATE LPS MetaTensor (workers stay IO-only). See curia2_radchest.yaml.
+  hf_repo: raidium/curia-2
+  axcodes: PLS
+  crop_size: 512
+  clip_below_air: true
+  eps: 1.0e-6
+  use_amp: true
+  slice_batch_size: 96

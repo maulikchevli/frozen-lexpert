@@ -1,0 +1,27 @@
+cache_path: results/embeddings/pillar0_radchest.pt
+device: null
+
+loader:
+  # Pillar-0 is heavy: 11 channels x 256^3 = 180 MB per forward input.
+  # Keep prefetch smaller to avoid memory churn.
+  num_workers: 6
+  prefetch_factor: 3
+  pin_memory: true
+
+dataset:
+  name: radchestct
+  json_path: ${oc.env:RADCHEST_ROOT}/json/monai_dict.json
+  id_key: NoteAcc_DEID
+  npz_key: ct
+  max_samples: 0
+  metadata_csv: ${oc.env:RADCHEST_ROOT}/CT_Scan_Metadata_Complete_35747.csv
+  spacing_column: final_spacing
+
+model:
+  name: pillar0
+  # Authors' canonical ct_chest preprocessing (RAVE `configs/ct_chest.yaml`)
+  # + CSVDataset Z-padding/cropping to 256.
+  hf_repo: YalaLab/Pillar0-ChestCT
+  modality: chest_ct
+  target_spacing: [1.25, 1.25, 1.25]
+  input_shape: [256, 256, 256]

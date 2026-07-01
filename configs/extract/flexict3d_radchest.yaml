@@ -1,0 +1,28 @@
+cache_path: results/embeddings/flexict3d_radchest.pt
+device: null
+
+loader:
+  num_workers: 8
+  prefetch_factor: 4
+  pin_memory: true
+
+dataset:
+  name: radchestct
+  json_path: ${oc.env:RADCHEST_ROOT}/json/monai_dict_refined.json   # 92-label refined superset; filter at eval
+  id_key: NoteAcc_DEID
+  npz_key: ct
+  max_samples: 0
+  metadata_csv: ${oc.env:RADCHEST_ROOT}/CT_Scan_Metadata_Complete_35747.csv
+  spacing_column: final_spacing
+
+model:
+  name: flexict
+  # FlexiCT-3D Stage-2 pure-SSL teacher (no text tower). 1728-d concat, kNN
+  # only. For the SSL-vs-VLM kNN sanity test. Checkpoint from
+  # $FLEXICT_3D_CHECKPOINT.
+  variant: 3d
+  project: false
+  axcodes: LPS
+  spacing: [2.0, 2.0, 2.0]
+  roi: 160
+  use_amp: true

@@ -1,0 +1,32 @@
+cache_path: results/embeddings/voxelfm_ctrate.pt
+device: null
+
+loader:
+  num_workers: 8
+  prefetch_factor: 4
+  pin_memory: true
+
+dataset:
+  name: ctrate
+  labels_csv: ${oc.env:CTRATE_ROOT}/reports/valid_predicted_labels.csv
+  data_dir: ${oc.env:CTRATE_ROOT}/validation
+  metadata_csv: ${oc.env:CTRATE_META}
+  max_samples: 0
+
+model:
+  name: voxelfm
+  # Worker stays IO-only (nibabel load + HU calibrate + LPS affine). VoxelFM
+  # preprocessing (adaptive isotropic resample + crop + z-score) runs in
+  # embed() using the LPS affine to recover per-axis spacing and reorder the
+  # axial axis to dim0. See voxelfm_radchest.yaml.
+  hf_repo: rmaguado/VoxelFM
+  subfolder: vitb_3d
+  checkpoint_file: vitb_3d/checkpoints/99999.pth
+  config_file: vitb_3d/config.yaml
+  repo_path: third_party/VoxelFM
+  feature: patch
+  max_patches: 25000
+  min_spacing: 0.75
+  crop_background: true
+  crop_kernel: 21
+  use_amp: false

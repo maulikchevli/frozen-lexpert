@@ -1,0 +1,21 @@
+cache_path: results/embeddings/pillar0_ctrate.pt
+device: null
+
+loader:
+  num_workers: 8
+  prefetch_factor: 4
+  pin_memory: true
+
+dataset:
+  name: ctrate
+  labels_csv: ${oc.env:CTRATE_ROOT}/reports/valid_predicted_labels.csv
+  data_dir: ${oc.env:CTRATE_ROOT}/validation
+  metadata_csv: ${oc.env:CTRATE_META}
+  max_samples: 0
+
+model:
+  name: pillar0
+  target_spacing: [1.25, 1.25, 1.25]
+  input_shape: [256, 256, 256]
+  modality: chest_ct
+  hf_repo: YalaLab/Pillar0-ChestCT

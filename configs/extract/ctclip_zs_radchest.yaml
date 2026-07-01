@@ -1,0 +1,27 @@
+cache_path: results/embeddings/ctclip-zs_radchest.pt
+device: null
+
+loader:
+  num_workers: 8
+  prefetch_factor: 4
+  pin_memory: true
+
+dataset:
+  name: radchestct
+  json_path: ${oc.env:RADCHEST_ROOT}/json/monai_dict.json
+  id_key: NoteAcc_DEID
+  npz_key: ct
+  max_samples: 0
+  metadata_csv: ${oc.env:RADCHEST_ROOT}/CT_Scan_Metadata_Complete_35747.csv
+  spacing_column: final_spacing
+
+# CT-CLIP's native post-projection 512-d feature: mean over temporal tokens,
+# flatten (h*w*dim = 294912), Linear(294912, 512). Required for zero-shot —
+# the shared image/text space `to_visual_latent` lives in is 512-d, and the
+# trained weights expect this exact pre-projection composition.
+model:
+  name: ctclip
+  input_shape: [240, 480, 480]
+  target_spacing: [1.5, 0.75, 0.75]
+  hu_range: [-1000.0, 1000.0]
+  project: true

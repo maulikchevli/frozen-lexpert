@@ -1,0 +1,28 @@
+cache_path: results/embeddings/flexict_radchest.pt
+device: null
+
+loader:
+  num_workers: 8
+  prefetch_factor: 4
+  pin_memory: true
+
+dataset:
+  name: radchestct
+  json_path: ${oc.env:RADCHEST_ROOT}/json/monai_dict_refined.json   # 92-label refined superset; filter at eval
+  id_key: NoteAcc_DEID
+  npz_key: ct
+  max_samples: 0
+  metadata_csv: ${oc.env:RADCHEST_ROOT}/CT_Scan_Metadata_Complete_35747.csv
+  spacing_column: final_spacing
+
+model:
+  name: flexict
+  # FlexiCT-3D-VLM image encoder (Stage-3, report-aligned ViT-Base, patch 8).
+  # project=false -> 1728-d concat([CLS], mean patch tokens) for kNN.
+  # Checkpoint from $FLEXICT_VLM_CHECKPOINT (set by scripts/setup_flexict.sh).
+  variant: vlm
+  project: false
+  axcodes: LPS          # FlexiCT canonical: matches Orientationd(axcodes="LPS") in its retrieval code
+  spacing: [2.0, 2.0, 2.0]
+  roi: 160
+  use_amp: true

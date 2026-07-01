@@ -1,0 +1,24 @@
+cache_path: results/embeddings/flexict-zs_ctrate.pt
+device: null
+
+loader:
+  num_workers: 8
+  prefetch_factor: 4
+  pin_memory: true
+
+dataset:
+  name: ctrate
+  labels_csv: ${oc.env:CTRATE_ROOT}/reports/valid_predicted_labels.csv
+  data_dir: ${oc.env:CTRATE_ROOT}/validation
+  metadata_csv: ${oc.env:CTRATE_META}
+  max_samples: 0
+
+model:
+  name: flexict
+  # Same VLM encoder, project=true -> 1024-d L2-normalized projection for ZS.
+  variant: vlm
+  project: true
+  axcodes: LPS
+  spacing: [2.0, 2.0, 2.0]
+  roi: 160
+  use_amp: true

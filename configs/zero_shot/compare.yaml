@@ -1,0 +1,19 @@
+output_dir: results/zero_shot/compare
+
+threshold: 0.5
+n_boot: 1000
+seed: 42
+
+predictions:
+  - name: colipri-crm
+    path: results/zero_shot/predictions/colipri-crm_predictions.pt
+  - name: ctclip
+    path: results/zero_shot/predictions/ctclip_predictions.pt
+  - name: merlin
+    path: results/zero_shot/predictions/merlin_predictions.pt
+  - name: pillar0
+    path: results/zero_shot/predictions/pillar0_predictions.pt
+  - name: spectre
+    path: results/zero_shot/predictions/spectre_predictions.pt
+  - name: flexict
+    path: results/zero_shot/predictions/flexict_predictions.pt

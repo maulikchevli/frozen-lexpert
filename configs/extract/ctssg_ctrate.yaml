@@ -1,0 +1,23 @@
+cache_path: results/embeddings/ctssg_ctrate.pt
+device: null
+
+loader:
+  num_workers: 8
+  prefetch_factor: 4
+  pin_memory: true
+
+dataset:
+  name: ctrate
+  labels_csv: ${oc.env:CTRATE_ROOT}/reports/valid_predicted_labels.csv
+  data_dir: ${oc.env:CTRATE_ROOT}/validation
+  metadata_csv: ${oc.env:CTRATE_META}
+  max_samples: 0
+
+model:
+  name: ctssg
+  repo_path: third_party/ct-ssg
+  input_size: 480
+  slice_count: 240
+  target_spacing: [1.5, 0.75, 0.75]
+  hu_range: [-1000.0, 200.0]
+  imagenet_mean: 0.449

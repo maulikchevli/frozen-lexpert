@@ -1,0 +1,9 @@
+model:
+  name: ctclip
+
+embedding_path: results/embeddings/ctclip-zs_ctrate.pt
+output_dir: results/zero_shot/ctrate/predictions
+
+threshold: 0.5
+n_boot: 1000
+seed: 42

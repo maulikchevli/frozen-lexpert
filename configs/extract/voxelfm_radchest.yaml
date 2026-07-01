@@ -1,0 +1,38 @@
+cache_path: results/embeddings/voxelfm_radchest.pt
+device: null
+
+loader:
+  num_workers: 8
+  prefetch_factor: 4
+  pin_memory: true
+
+dataset:
+  name: radchestct
+  json_path: ${oc.env:RADCHEST_ROOT}/json/monai_dict_refined.json   # 92-label refined superset; filter at eval
+  id_key: NoteAcc_DEID
+  npz_key: ct
+  max_samples: 0
+  metadata_csv: ${oc.env:RADCHEST_ROOT}/CT_Scan_Metadata_Complete_35747.csv
+  spacing_column: final_spacing
+
+model:
+  name: voxelfm
+  # VoxelFM (rmaguado/VoxelFM, Apache-2.0): DINOv2-style 3D ViT (vitb_3d,
+  # patch 14, embed_dim 864, 4 register tokens), no text tower → kNN /
+  # linear-probe track only. Preprocessing mirrors the author's canonical
+  # eval `worker`: HU clamp -> crop_volume(k=21) -> adaptive isotropic
+  # resample (min 0.75 mm) -> resize_max_patches(25000) -> patch_crop ->
+  # global z-score (from shipped config.yaml). Embedding = mean-pooled patch
+  # tokens (their reported CT-RATE kNN feature). Worker is IO-only; all
+  # preprocessing runs in embed() with the native isotropic spacing.
+  hf_repo: rmaguado/VoxelFM
+  subfolder: vitb_3d
+  checkpoint_file: vitb_3d/checkpoints/99999.pth
+  config_file: vitb_3d/config.yaml
+  repo_path: third_party/VoxelFM
+  feature: patch        # mean-pooled patch tokens (864-d); "cls" for CLS token
+  max_patches: 25000    # author eval budget (evaluation/*/embeddings.py)
+  min_spacing: 0.75     # adaptive isotropic target = max(min(native), 0.75)
+  crop_background: true  # crop_volume(k=21), as in the canonical eval worker
+  crop_kernel: 21
+  use_amp: false         # authors run fp32; keep faithful for representation

@@ -1,0 +1,26 @@
+cache_path: results/embeddings/spectre-large_radchest.pt
+device: null            # null -> auto (cuda if available)
+
+loader:
+  num_workers: 12
+  prefetch_factor: 4
+  pin_memory: true
+
+dataset:
+  name: radchestct
+  json_path: ${oc.env:RADCHEST_ROOT}/json/monai_dict.json
+  id_key: NoteAcc_DEID
+  npz_key: ct
+  max_samples: 0
+  metadata_csv: ${oc.env:RADCHEST_ROOT}/CT_Scan_Metadata_Complete_35747.csv
+  spacing_column: final_spacing
+
+model:
+  name: spectre
+  model_config: spectre-large-pretrained
+  patch_size: [128, 128, 64]
+  grid_size: [3, 3, 4]
+  # SPECTRE's SigLIP config: 0.75/0.75/1.5 mm -> (384, 384, 256).
+  target_spacing: [0.75, 0.75, 1.5]
+  target_shape: [384, 384, 256]
+  use_amp: true

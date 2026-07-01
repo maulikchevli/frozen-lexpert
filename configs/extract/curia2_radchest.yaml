@@ -1,0 +1,30 @@
+cache_path: results/embeddings/curia2_radchest.pt
+device: null
+
+loader:
+  num_workers: 8
+  prefetch_factor: 4
+  pin_memory: true
+
+dataset:
+  name: radchestct
+  json_path: ${oc.env:RADCHEST_ROOT}/json/monai_dict_refined.json   # 92-label refined superset; filter at eval
+  id_key: NoteAcc_DEID
+  npz_key: ct
+  max_samples: 0
+  metadata_csv: ${oc.env:RADCHEST_ROOT}/CT_Scan_Metadata_Complete_35747.csv
+  spacing_column: final_spacing
+
+model:
+  name: curia2
+  # Curia-2 B (raidium/curia-2): stock HF Dinov2Model, 2D-slice SSL FM for
+  # CT+MRI. Slice-loop extractor — orient to axial (P,L,S), per-slice resize
+  # 512 + clamp + per-volume z-score (mirrors curia_image_processor.py),
+  # mean-pool the 768-d CLS over axial slices. kNN/linear-probe track.
+  hf_repo: raidium/curia-2
+  axcodes: PLS          # axial slices on last axis, indexed [P, L]
+  crop_size: 512
+  clip_below_air: true
+  eps: 1.0e-6
+  use_amp: true          # bf16 autocast for the DINOv2 forwards (H100 tensor cores)
+  slice_batch_size: 96   # axial slices per encoder forward; bf16 allows 128+ on H100

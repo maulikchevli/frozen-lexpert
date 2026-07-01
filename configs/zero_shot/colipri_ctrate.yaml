@@ -1,0 +1,9 @@
+model:
+  name: colipri-crm
+
+embedding_path: results/embeddings/colipri-crm_ctrate.pt
+output_dir: results/zero_shot/ctrate/predictions
+
+threshold: 0.5
+n_boot: 1000
+seed: 42

@@ -1,0 +1,24 @@
+cache_path: results/embeddings/merlin_radchest.pt
+device: null
+
+loader:
+  # Small input (160x224x224 at coarse spacing): cheap per-sample, small prefetch suffices.
+  num_workers: 8
+  prefetch_factor: 4
+  pin_memory: true
+
+dataset:
+  name: radchestct
+  json_path: ${oc.env:RADCHEST_ROOT}/json/monai_dict.json
+  id_key: NoteAcc_DEID
+  npz_key: ct
+  max_samples: 0
+  metadata_csv: ${oc.env:RADCHEST_ROOT}/CT_Scan_Metadata_Complete_35747.csv
+  spacing_column: final_spacing
+
+model:
+  name: merlin
+  # Authors' canonical transforms (merlin.data.monai_transforms.ImageTransforms).
+  input_shape: [224, 224, 160]
+  target_spacing: [1.5, 1.5, 3.0]
+  hu_range: [-1000.0, 1000.0]

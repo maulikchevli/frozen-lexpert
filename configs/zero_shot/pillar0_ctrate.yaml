@@ -1,0 +1,9 @@
+model:
+  name: pillar0
+
+embedding_path: results/embeddings/pillar0_ctrate.pt
+output_dir: results/zero_shot/ctrate/predictions
+
+threshold: 0.5
+n_boot: 1000
+seed: 42

@@ -1,0 +1,27 @@
+cache_path: results/embeddings/flexict3d_ctrate.pt
+device: null
+
+loader:
+  num_workers: 8
+  prefetch_factor: 4
+  pin_memory: true
+
+dataset:
+  name: ctrate
+  labels_csv: ${oc.env:CTRATE_ROOT}/reports/valid_predicted_labels.csv
+  data_dir: ${oc.env:CTRATE_ROOT}/validation
+  metadata_csv: ${oc.env:CTRATE_META}
+  max_samples: 0
+
+model:
+  name: flexict
+  # FlexiCT-3D Stage-2 pure-SSL teacher (no text tower). 1728-d concat, kNN
+  # only — the SSL-vs-VLM kNN sanity test on CT-RATE. NOTE: CT-RATE is in
+  # FlexiCT's pretraining corpus -> in-distribution / leaky (flag like
+  # COLIPRI/Pillar-0). Checkpoint from $FLEXICT_3D_CHECKPOINT.
+  variant: 3d
+  project: false
+  axcodes: LPS
+  spacing: [2.0, 2.0, 2.0]
+  roi: 160
+  use_amp: true
