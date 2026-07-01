@@ -21,6 +21,7 @@ dependencies = [
     "safetensors",
     "open-clip-torch>=2.24",
     "pillow",
+    "matplotlib",
 ]
 
 # Optional, per-model. Install only the models you want to run; see

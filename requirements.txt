@@ -19,3 +19,4 @@ huggingface_hub
 safetensors
 open-clip-torch>=2.24
 pillow
+matplotlib      # paper figures (per-class grid, per-organ, data-efficiency)

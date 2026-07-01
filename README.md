@@ -1,4 +1,4 @@
-# Evaluating the Raw Representational Power of 3D CT Foundation Models
+# Big, Bright, or Invisible: A Frozen-Feature Benchmark of 3D CT Foundation Models
 
 Companion code for the paper (anonymous submission). It reproduces the
 **frozen-encoder readouts** on the two **public** datasets used in the paper:
@@ -134,6 +134,33 @@ Prompt pair: `"A chest CT scan showing {finding}."` /
 `σ(cos(z, t⁺) − cos(z, t⁻))` on ℓ2-normalized image/text embeddings. The scan's
 own report is never used.
 
+### 2d. AUROC, finding-type analysis, and paper figures
+
+These read the pools / CSVs produced above — no GPU:
+
+```bash
+# per-(model, cohort, readout, label) ROC-AUC + PR-AUC — the shared input below
+python scripts/paper_perclass_roc_pr.py
+
+# macro AUROC per (model, cohort) with paired-bootstrap CIs (+ LaTeX table)
+python scripts/paper_auroc_by_cohort.py
+python scripts/paper_overview_macro_ci.py    # macro AUROC incl. zero-shot (Fig. 2a forest)
+
+# finding-type taxonomy (label -> organ_system + phenotype); a prebuilt
+# results/paper/concept_features.csv is shipped — this regenerates it
+python scripts/paper_build_concept_features.py
+
+# Kendall's W: finding-type difficulty concordance across encoders
+python scripts/paper_kendall_w.py
+
+# figures
+python scripts/paper_fig_perclass_grid.py    # per-finding AUROC grid (Fig. 5)
+python scripts/paper_fig_per_organ.py        # per-organ linear-probe AUROC (Fig. 2b)
+python scripts/paper_data_efficiency.py      # data-efficiency curves (Fig. 2c)
+```
+
+Outputs land in `${CTFM_RESULTS}/paper/` (CSVs, `.tex` tables, and `figs/*.pdf`).
+
 ---
 
 ## Layout
@@ -152,21 +179,59 @@ scripts/
   paper_run_probe.py       per-label kNN + linear-probe PR-AUC matrix
   paper_save_pools.py      out-of-fold pools for the paired bootstrap
   paper_patient_groups.py  patient-grouping + CT-RATE dedup utilities
-  paper_bootstrap.py       patient-grouped shared-resample bootstrap CIs
+  paper_bootstrap.py       patient-grouped shared-resample bootstrap CIs (skill + finding-type)
+  paper_perclass_roc_pr.py per-(model,cohort,readout,label) ROC-AUC + PR-AUC
+  paper_auroc_by_cohort.py macro AUROC per cohort + bootstrap CIs (+ LaTeX table)
+  paper_overview_macro_ci.py macro AUROC (kNN + zero-shot) for the overview forest
+  paper_build_concept_features.py label -> organ_system + finding-type taxonomy
+  paper_kendall_w.py       finding-type difficulty concordance (Kendall W)
+  paper_fig_perclass_grid.py per-finding AUROC grid (Fig. 5)
+  paper_fig_per_organ.py   per-organ linear-probe AUROC (Fig. 2b)
+  paper_data_efficiency.py data-efficiency curves (Fig. 2c)
   zero_shot_score.py       per-model zero-shot scoring
   zero_shot_compare.py     zero-shot aggregation + paired comparison
 configs/{extract,evaluate,zero_shot}/   Hydra configs (paths via env vars)
 docs/model_preprocessing.md             per-model preprocessing contracts
+results/paper/concept_features.csv      shipped label -> organ/finding-type table (public cohorts)
 ```
 
 ## Metric policy
 
-PR-AUC (average precision), **not** ROC-AUC, on these imbalanced multi-label
-tasks, always reported next to class prevalence (PR-AUC's random baseline =
-prevalence). Point estimates are computed once on the pooled out-of-fold
-predictions; uncertainty comes from the patient-level bootstrap. Model
-comparisons use the **paired** bootstrap (same resample indices for both
-models) so the CI of the *difference* is the basis for any "A beats B" claim.
+We report two complementary metrics, matching the paper:
+
+- **Prevalence-normalized PR-AUC ("skill")** = (AP − π)/(1 − π): average
+  precision rescaled so that 0 = the base rate and 1 = a perfect ranking. On
+  these highly imbalanced multi-label tasks, PR-AUC (average precision) — not raw
+  ROC-AUC — is the sensitive choice, and because its random baseline equals the
+  class prevalence, prevalence is always carried alongside it.
+- **AUROC**, computed deliberately as a *prevalence-invariant* complement: it lets
+  encoders be ranked comparably across cohorts with very different label
+  frequencies (`scripts/paper_auroc_by_cohort.py`,
+  `scripts/paper_overview_macro_ci.py`, `scripts/paper_perclass_roc_pr.py`).
+
+Point estimates are computed once on the pooled out-of-fold predictions;
+uncertainty comes from the patient-level bootstrap. Model comparisons use the
+**paired** bootstrap (same resample indices for both models) so the CI of the
+*difference* is the basis for any "A beats B" claim.
+
+## Reproducibility scope
+
+This release runs on the two public cohorts only. Consequences for matching the
+paper's exact printed numbers:
+
+- The private clinical cohort is excluded (see **Anonymity** above), so paper
+  numbers that are specific to it — e.g. its rows/columns in the multi-cohort
+  figures — are not reproducible here.
+- Statistics the paper computes over all three cohorts (Kendall's W, the
+  per-organ and finding-type difficulty ordering) are recomputed here over
+  RadChestCT + CT-RATE with **identical methodology**, so the exact values differ
+  from the three-cohort figures in the paper.
+- The contrast × extent analysis (paper Fig. 4) relies primarily on the private
+  cohort and is **not** part of this release.
+
+Everything else — the AUROC / skill readouts, the per-class grid, and the
+per-organ and data-efficiency figures — is fully reproducible on the public
+cohorts.
 
 ## License
 

@@ -109,6 +109,7 @@ def boot_unit(cohort_suffix, cohort_name, model, readout):
            "point_macro": float(np.mean([skill(point_ap[l], prev[l]) for l in point_ap])),
            "labels": np.array(list(point_ap.keys()), dtype=object),
            "point_ap": np.array([point_ap[l] for l in point_ap]),
+           "point_per_label": np.array([skill(point_ap[l], prev[l]) for l in point_ap]),
            "prevalence": np.array([prev[l] for l in point_ap])}
     fts_keep = [fts[c] for c in keep]
     for ft in sorted(set(fts_keep)):
