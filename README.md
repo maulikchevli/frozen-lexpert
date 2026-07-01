@@ -1,4 +1,4 @@
-# Big, Bright, or Invisible: A Frozen-Feature Benchmark of 3D CT Foundation Models
+# Evaluating the Raw Representational Power of 3D CT Foundation Models
 
 Companion code for the paper (anonymous submission). It reproduces the
 **frozen-encoder readouts** on the two **public** datasets used in the paper:
@@ -197,22 +197,24 @@ results/paper/concept_features.csv      shipped label -> organ/finding-type tabl
 
 ## Metric policy
 
-We report two complementary metrics, matching the paper:
+Matching the paper, we report two **paired** metrics — neither is read alone:
 
-- **Prevalence-normalized PR-AUC ("skill")** = (AP − π)/(1 − π): average
-  precision rescaled so that 0 = the base rate and 1 = a perfect ranking. On
-  these highly imbalanced multi-label tasks, PR-AUC (average precision) — not raw
-  ROC-AUC — is the sensitive choice, and because its random baseline equals the
-  class prevalence, prevalence is always carried alongside it.
-- **AUROC**, computed deliberately as a *prevalence-invariant* complement: it lets
-  encoders be ranked comparably across cohorts with very different label
-  frequencies (`scripts/paper_auroc_by_cohort.py`,
-  `scripts/paper_overview_macro_ci.py`, `scripts/paper_perclass_roc_pr.py`).
+- **AUROC** — prevalence-independent, so encoders can be ranked comparably across
+  cohorts with very different label frequencies. Because AUROC tolerates false
+  positives on rare findings (it can sit well above chance even when a model is of
+  little practical use), it is always paired with skill
+  (`scripts/paper_auroc_by_cohort.py`, `scripts/paper_overview_macro_ci.py`,
+  `scripts/paper_perclass_roc_pr.py`).
+- **Skill** = prevalence-normalized PR-AUC = (AP − π)/(1 − π), where AP is the
+  average precision and π the finding's prevalence, so a model scores 0 at the
+  base rate and 1 for a perfect ranking. Skill restores the prevalence
+  sensitivity that AUROC discards (`scripts/paper_bootstrap.py`).
 
-Point estimates are computed once on the pooled out-of-fold predictions;
-uncertainty comes from the patient-level bootstrap. Model comparisons use the
-**paired** bootstrap (same resample indices for both models) so the CI of the
-*difference* is the basis for any "A beats B" claim.
+Point estimates are computed once on the pooled out-of-fold predictions; 95% CIs
+come from 1,000 paired patient-level bootstrap resamples (identical resample
+indices across models and readouts), so the CI of the *difference* is the basis
+for any "A beats B" claim. Macro averages are taken over findings with at least
+20 positives.
 
 ## Reproducibility scope
 

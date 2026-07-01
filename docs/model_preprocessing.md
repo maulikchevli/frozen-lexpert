@@ -243,8 +243,13 @@ Superior, axis 1 goes Left, axis 2 goes Posterior (positive directions).
 
 Not model-specific, but worth preserving:
 
-1. **PR-AUC, not ROC-AUC** for imbalanced multilabel. Always print class
-   prevalence next to PR-AUC (random baseline = prevalence, not 0.5).
+1. **Report AUROC and prevalence-normalized PR-AUC ("skill") together** for
+   imbalanced multilabel. AUROC is prevalence-invariant (comparable across
+   cohorts) but tolerates false positives on rare classes, so it is paired with
+   skill = (AP − prevalence)/(1 − prevalence). Always print class prevalence
+   next to PR-AUC (random baseline = prevalence, not 0.5). The legacy
+   `scripts/evaluate.py` quick-compare reports PR-AUC/F1 only; the paper pipeline
+   reports both (see the README "Metric policy").
 2. **Pool all out-of-fold predictions** into one `[N, C]` matrix; compute
    metrics once on the pool. Don't average per-fold point estimates.
 3. **Bootstrap over samples** (n_boot=1000) for 95% CIs — captures
