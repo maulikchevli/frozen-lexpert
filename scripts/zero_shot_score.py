@@ -22,10 +22,8 @@ from ctfm_eval.eval import _bootstrap_metrics, _merge_per_class, _merge_scalar
 from ctfm_eval.knn import multilabel_metrics
 from ctfm_eval.zero_shot import (
     build_prompts,
-    build_prompts_ensemble,
     build_scorer,
     score_against_prompts,
-    score_against_prompts_ensemble,
 )
 
 
@@ -54,26 +52,13 @@ def main(cfg: DictConfig) -> None:
     print(f"loaded {batch.embeddings.shape}  labels={len(batch.label_columns)}  "
           f"dataset={batch.dataset_name}")
 
-    prompt_style = str(cfg.get("prompt_style", "generic"))
-    ensemble = bool(cfg.get("prompt_ensemble", False))
-    if ensemble:
-        pos_sets, neg_sets = build_prompts_ensemble(batch.label_columns)
-        # Flatten: one prompt per (label, template) pair for encode_text.
-        print(f"[prompt ensemble] {len(pos_sets[0])} templates × {len(batch.label_columns)} labels")
-        for lbl, p_list in list(zip(batch.label_columns, pos_sets))[:3]:
-            print(f"  {lbl}: {p_list[0]!r} ... ({len(p_list)} paraphrases)")
-        pos, neg = pos_sets, neg_sets
-    else:
-        pos, neg = build_prompts(batch.label_columns, style=prompt_style)
-        for lbl, p, n in zip(batch.label_columns, pos, neg):
-            print(f"  {lbl:32s}  pos={p!r}  neg={n!r}")
+    pos, neg = build_prompts(batch.label_columns)
+    for lbl, p, n in zip(batch.label_columns, pos, neg):
+        print(f"  {lbl:32s}  pos={p!r}  neg={n!r}")
 
     device = _device(cfg.get("device"))
     scorer = build_scorer(cfg.model.name)
-    if ensemble:
-        probs = score_against_prompts_ensemble(batch.embeddings, pos, neg, scorer, device)
-    else:
-        probs = score_against_prompts(batch.embeddings, pos, neg, scorer, device)  # [N, C]
+    probs = score_against_prompts(batch.embeddings, pos, neg, scorer, device)  # [N, C]
     targets = batch.labels
 
     threshold = float(cfg.get("threshold", 0.5))
@@ -89,8 +74,6 @@ def main(cfg: DictConfig) -> None:
         "config": {
             "model": cfg.model.name,
             "threshold": threshold, "n_boot": n_boot, "seed": seed,
-            "prompt_style": prompt_style,
-            "prompt_ensemble": ensemble,
         },
         "n_samples": int(probs.shape[0]),
         "aggregate": _merge_scalar(point, scalar_ci),

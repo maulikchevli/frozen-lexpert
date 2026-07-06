@@ -1,4 +1,4 @@
-# Evaluating the Raw Representational Power of 3D CT Foundation Models
+# Big, Bright, or Invisible: A Frozen-Feature Benchmark of 3D CT Foundation Models
 
 Companion code for the paper (anonymous submission). It reproduces the
 **frozen-encoder readouts** on the two **public** datasets used in the paper:

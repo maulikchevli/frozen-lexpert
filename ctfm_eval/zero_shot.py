@@ -21,29 +21,6 @@ import torch
 POSITIVE_TEMPLATE = "A chest CT scan showing {finding}."
 NEGATIVE_TEMPLATE = "A chest CT scan showing no {finding}."
 
-# Report-style templates — match typical radiology-report phrasing for models
-# (SPECTRE in particular) whose text heads were trained on actual reports
-# rather than generic "A chest CT showing X" captions.
-#
-# Design: keep the wording close to what appears in CT-RATE / RadChest train
-# reports — short, declarative, with "Findings:"/"Impression:" cues.
-REPORT_POS_TEMPLATE = "Findings: {finding} is present."
-REPORT_NEG_TEMPLATE = "Findings: No {finding}."
-
-# A pool of report-style paraphrases for ensembling. The first pair is the
-# single-prompt default (see REPORT_POS_TEMPLATE above). All pairs are
-# structurally matched so (pos, neg) describe the same finding.
-REPORT_TEMPLATE_ENSEMBLE: list[tuple[str, str]] = [
-    ("Findings: {finding} is present.",               "Findings: No {finding}."),
-    ("There is {finding}.",                           "There is no {finding}."),
-    ("The scan demonstrates {finding}.",              "The scan demonstrates no {finding}."),
-    ("Evidence of {finding} is seen.",                "No evidence of {finding} is seen."),
-    ("Impression: {finding}.",                        "Impression: No {finding}."),
-    ("{finding} is noted on this chest CT.",          "No {finding} is noted on this chest CT."),
-    ("{finding} is visible.",                         "{finding} is not visible."),
-    ("The findings include {finding}.",               "The findings do not include {finding}."),
-]
-
 # Natural-language phrase for each RadChest label column. Missing entries
 # fall back to snake-case -> space. Covers the 65 diseases+findings used for
 # zero-shot; devices + surgical-history labels aren't zero-shot-evaluated,
@@ -143,54 +120,22 @@ RADCHEST_FINDINGS: dict[str, str] = {
 
 def _finding_text(lbl: str) -> str:
     """Label → human-language finding phrase, with CT-RATE / RadChest lookup
-    and snake-case fallback. Used by both single-template and ensemble prompt
-    builders."""
+    and snake-case fallback."""
     if lbl in CTRATE_FINDINGS:
         return CTRATE_FINDINGS[lbl]
     return RADCHEST_FINDINGS.get(lbl, lbl.replace("_", " ").lower())
 
 
-def build_prompts(labels: list[str], style: str = "generic") -> tuple[list[str], list[str]]:
-    """Return `(positives, negatives)` parallel to `labels`.
-
-    style:
-      - "generic" (default): "A chest CT scan showing {finding}." / "A chest
-        CT scan showing no {finding}." — unchanged from the original spec.
-      - "report": radiology-report phrasing. Intended for SPECTRE whose
-        SigLIP text head was trained on actual reports — generic prompts
-        leave ~20 PR-AUC points on the table there.
-    """
+def build_prompts(labels: list[str]) -> tuple[list[str], list[str]]:
+    """Return `(positives, negatives)` parallel to `labels`, using the fixed
+    prompt pair "A chest CT scan showing {finding}." / "A chest CT scan showing
+    no {finding}."."""
     pos: list[str] = []
     neg: list[str] = []
-    if style == "generic":
-        pos_t, neg_t = POSITIVE_TEMPLATE, NEGATIVE_TEMPLATE
-    elif style == "report":
-        pos_t, neg_t = REPORT_POS_TEMPLATE, REPORT_NEG_TEMPLATE
-    else:
-        raise ValueError(f"unknown style: {style!r}")
     for lbl in labels:
         finding = _finding_text(lbl)
-        pos.append(pos_t.format(finding=finding))
-        neg.append(neg_t.format(finding=finding))
-    return pos, neg
-
-
-def build_prompts_ensemble(
-    labels: list[str], templates: list[tuple[str, str]] | None = None,
-) -> tuple[list[list[str]], list[list[str]]]:
-    """Return `(positives, negatives)` where each element is a LIST of
-    paraphrased prompts for that label — one per template in `templates`.
-
-    The caller averages embeddings across the paraphrases to get a single
-    per-label text embedding (template-ensemble zero-shot).
-    """
-    tpls = templates or REPORT_TEMPLATE_ENSEMBLE
-    pos: list[list[str]] = []
-    neg: list[list[str]] = []
-    for lbl in labels:
-        finding = _finding_text(lbl)
-        pos.append([p.format(finding=finding) for p, _ in tpls])
-        neg.append([n.format(finding=finding) for _, n in tpls])
+        pos.append(POSITIVE_TEMPLATE.format(finding=finding))
+        neg.append(NEGATIVE_TEMPLATE.format(finding=finding))
     return pos, neg
 
 
@@ -248,44 +193,6 @@ def score_against_prompts(
     neg = scorer.encode_text(neg_prompts)                    # [C, D]
     cos_pos = img @ pos.T                                    # [N, C]
     cos_neg = img @ neg.T                                    # [N, C]
-    return torch.sigmoid(cos_pos - cos_neg).float().cpu()
-
-
-def score_against_prompts_ensemble(
-    image_feats: torch.Tensor,
-    pos_prompt_sets: list[list[str]],   # [C][K] — K paraphrases per class
-    neg_prompt_sets: list[list[str]],
-    scorer: "ZeroShotScorer",
-    device: torch.device,
-) -> torch.Tensor:
-    """Ensemble variant of `score_against_prompts`.
-
-    Encodes every paraphrase, averages the K text embeddings per class
-    into one prototype, then scores as usual. Averaging happens in the
-    already-L2-normalised embedding space (scorer.encode_text applies
-    normalization) then re-normalizes the mean so cosine math stays valid.
-    """
-    scorer.to(device)
-    img = scorer.project_image(image_feats.to(device))            # [N, D]
-    C = len(pos_prompt_sets)
-    assert len(neg_prompt_sets) == C
-
-    def _avg(sets: list[list[str]]) -> torch.Tensor:
-        # Flatten, encode once, then mean-pool per class, then re-normalize.
-        flat = [p for row in sets for p in row]
-        per_class = [len(row) for row in sets]
-        enc = scorer.encode_text(flat)                             # [sum_k, D]
-        out = torch.empty(C, enc.shape[1], device=enc.device, dtype=enc.dtype)
-        offset = 0
-        for c, k in enumerate(per_class):
-            out[c] = enc[offset : offset + k].mean(dim=0)
-            offset += k
-        return torch.nn.functional.normalize(out, dim=-1)
-
-    pos = _avg(pos_prompt_sets)                                    # [C, D]
-    neg = _avg(neg_prompt_sets)                                    # [C, D]
-    cos_pos = img @ pos.T
-    cos_neg = img @ neg.T
     return torch.sigmoid(cos_pos - cos_neg).float().cpu()
 
 
