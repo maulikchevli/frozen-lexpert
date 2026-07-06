@@ -1,4 +1,4 @@
-# Big, Bright, or Invisible: A Frozen-Feature Benchmark of 3D CT Foundation Models
+# Evaluating the Raw Representational Power of 3D CT Foundation Models
 
 Companion code for the paper (anonymous submission). It reproduces the
 **frozen-encoder readouts** on the two **public** datasets used in the paper:
@@ -192,6 +192,7 @@ scripts/
   zero_shot_compare.py     zero-shot aggregation + paired comparison
 configs/{extract,evaluate,zero_shot}/   Hydra configs (paths via env vars)
 docs/model_preprocessing.md             per-model preprocessing contracts
+docs/finding_types.md                   finding -> phenotype mapping (human-readable, all 110 labels)
 results/paper/concept_features.csv      shipped label -> organ/finding-type table (public cohorts)
 ```
 
